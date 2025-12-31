@@ -1,6 +1,6 @@
 # VOXPACT 
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/AM-AG/AI-partner-catalyst/VoxPact.PNG" />
+<img width="1200" height="475" alt="GHBanner" src="assets/VoxPact.PNG" />
 </div>
 
 ## VOXPACT – Strategic AI Intelligence Platform
