@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { GeneratedImage, ImageResolution, Project, Theme } from '../types';
-import { db } from '../store/db';
+import { GeneratedImage, ImageResolution, Project, Theme } from '../../types';
+import { db } from '../../store/db';
 
 interface VisualStudioProps {
   project: Project | null;

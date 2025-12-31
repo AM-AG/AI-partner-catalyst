@@ -5,8 +5,8 @@ import { LiveSession } from './components/LiveSession';
 import { SmartChat } from './components/SmartChat';
 import { VisualStudio } from './components/VisualStudio';
 import { LandingPage } from './components/LandingPage';
-import { User, Project, Theme } from './types';
-import { db, STARTING_CREDITS } from './store/db';
+import { User, Project, Theme } from '../types';
+import { db, STARTING_CREDITS } from '../store/db';
 
 function parseJwt(token: string) {
   try {

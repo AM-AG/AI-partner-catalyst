@@ -8,23 +8,6 @@ export interface User {
   email: string;
   credits: number;
 }
-export interface SidebarProps {
-  currentView: View;
-  onViewChange: (view: View) => void;
-  user: User | null;
-  onLogin: () => void;
-  onLogout: () => void;
-  activeProject: Project | null;
-  onSelectProject: (p: Project) => void;
-  onNewProject: (view: View, name: string) => void;
-  onDeleteProject: (id: string) => void;
-  onUpdateUser: (user: User) => void;
-  theme: Theme;
-  onThemeToggle: () => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-}
-
 
 export interface SmartChatProps {
   project: Project | null;

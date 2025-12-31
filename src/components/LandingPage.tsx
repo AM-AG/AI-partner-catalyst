@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { InfoModal } from './InfoModals';
-import { ModalType } from '../types';
+import { ModalType } from '../../types';
 
 /* ---------------------------------- */
 /* Types */

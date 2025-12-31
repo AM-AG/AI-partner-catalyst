@@ -1,5 +1,5 @@
 import React from 'react';
-import { Theme, ModalType } from '../types';
+import { Theme, ModalType } from '../../types';
 
 interface InfoModalProps {
   type: ModalType;

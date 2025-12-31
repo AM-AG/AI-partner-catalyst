@@ -2,11 +2,11 @@ import React, {useState,useRef,useEffect,useCallback,useMemo} from 'react';
 import { jsPDF } from 'jspdf';
 import { GoogleGenAI } from '@google/genai';
 
-import { SmartChatProps, PdfThemeConfig, ChatMessage, Project, Theme, Attachment } from '../types';
-import { db } from '../store/db';
-import { createFileTool, createPdfTool } from '../tools';
-import { createPdf } from '../services/pdfGenerator';
-import {ai, aiConfig} from '../services/aiClient';
+import { SmartChatProps, PdfThemeConfig, ChatMessage, Project, Theme, Attachment } from '../../types';
+import { db } from '../../store/db';
+import { createFileTool, createPdfTool } from '../../tools';
+import { createPdf } from '../../services/pdfGenerator';
+import {ai, aiConfig} from '../../services/aiClient';
 
 /* ???????????????????????????? Constants ???????????????????????????? */
 

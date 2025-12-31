@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Theme, Project, Attachment } from '../types';
-import { useLiveSession } from '../hooks/useLiveSession';
+import { Theme, Project, Attachment } from '../../types';
+import { useLiveSession } from '../../hooks/useLiveSession';
 
 export const LiveSession: React.FC<{
   project: Project | null;

@@ -1,9 +1,25 @@
 
 import React, { useRef, useState } from 'react';
 import { View } from '../App';
-import { User, SidebarProps, Project, Theme } from '../types';
-import { db } from '../store/db';
+import { User, Project, Theme } from '../../types';
+import { db } from '../../store/db';
 
+interface SidebarProps {
+  currentView: View;
+  onViewChange: (view: View) => void;
+  user: User | null;
+  onLogin: () => void;
+  onLogout: () => void;
+  activeProject: Project | null;
+  onSelectProject: (p: Project) => void;
+  onNewProject: (view: View, name: string) => void;
+  onDeleteProject: (id: string) => void;
+  onUpdateUser: (user: User) => void;
+  theme: Theme;
+  onThemeToggle: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+}
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   currentView, onViewChange, user, onLogin, onLogout, activeProject, onSelectProject, onNewProject, onDeleteProject, onUpdateUser, theme, onThemeToggle, isCollapsed, onToggleCollapse 
