@@ -1,20 +1,50 @@
+# VOXPACT 
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/AM-AG/AI-partner-catalyst/VoxPact.PNG" />
 </div>
 
-# Run and deploy your AI Studio app
+## VOXPACT – Strategic AI Intelligence Platform
 
-This contains everything you need to run your app locally.
+VOXPACT is a high-fidelity AI chat and document synthesis platform designed for strategic analysis, intelligence reporting, and structured knowledge generation.
+It combines multimodal AI chat, file ingestion, speech interfaces, and automated PDF report synthesis into a single tactical workspace.
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+Built for precision, not chatter.
 
-## Run Locally
+## Core Features
+# * Multimodal AI Chat
 
-**Prerequisites:**  Node.js
+- Text + file inputs (PDFs, images, documents)
 
+- Context-aware conversations with rolling memory
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- Tool-calling support for document and file generation
+
+- Tactical system prompt enforcement
+
+# * AI-Generated Strategic Reports (PDF)
+
+- Structured PDF synthesis using jsPDF
+
+- Headings, sections, and layout awareness
+
+- Configurable typography and accent colors
+
+- Optional AI-generated technical visuals
+
+- Automatic pagination and headers
+
+# * Speech Interfaces
+
+- Speech-to-text input using Web Speech API
+
+- Text-to-speech playback for AI responses
+
+- Live listening indicators and playback control
+
+# * File Intelligence
+
+- Attach multiple files per message
+
+- Inline Base64 ingestion for AI models
+
+- Persistent attachment history per conversation
