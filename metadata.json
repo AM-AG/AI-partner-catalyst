@@ -1,0 +1,7 @@
+{
+  "name": "VOXPACT AI",
+  "description": "A futuristic multi-modal AI interface featuring Live Audio conversation, Grounded Search, and Pro Image Generation powered by Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
