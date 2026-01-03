@@ -8,21 +8,21 @@ import { createFileTool, createPdfTool } from '../../tools';
 import { createPdf } from '../../services/pdfGenerator';
 import {ai, aiConfig} from '../../services/aiClient';
 
-/* ???????????????????????????? Constants ???????????????????????????? */
+/*  -------------------------- Constants -------------------------- */
 
 const COST_PER_CHAT = 5;
 const PAGE_MARGIN = 20;
 const PAGE_TOP = 30;
 const PAGE_BOTTOM = 270;
 
-/* ???????????????????????????? Component ???????????????????????????? */
+/*  -------------------------- Component -------------------------- */
 
 export const SmartChat: React.FC<SmartChatProps> = ({
   project,
   theme,
   onUpdateCredits
 }) => {
-  /* ????????? State ????????? */
+  /*  -------------------------- State  -------------------------- */
 
   const [messages, setMessages] = useState<ChatMessage[]>(
     project?.data?.messages ?? []
@@ -41,7 +41,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
     fontSize: 11
   });
 
-  /* ????????? Refs ????????? */
+  /*  -------------------------- Refs  -------------------------- */
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,7 +49,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
 
   const isDark = useMemo(() => theme === 'dark', [theme]);
 
-  /* ???????????????????????????? Effects ???????????????????????????? */
+  /*  -------------------------- Effects  -------------------------- */
 
   // Auto-scroll
   useEffect(() => {
@@ -94,7 +94,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
     return () => clearTimeout(t);
   }, [messages, project]);
 
-  /* ???????????????????????????? Helpers ???????????????????????????? */
+  /*  -------------------------- Helpers  -------------------------- */
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) return;
@@ -145,7 +145,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
   }, []);
 
 
-  /* ???????????????????????????? Send Logic ???????????????????????????? */
+  /*  -------------------------- Send Logic -------------------------- */
 
   const handleSend = useCallback(async () => {
     if (isLoading) return;
@@ -193,7 +193,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
       }));
 
       let response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-pro-preview',
         contents,
         config: aiConfig
       });
@@ -205,9 +205,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
           let result = 'FAILED';
 
           if (call.name === 'create_pdf') {
-            result = await createPdf(
-              call.args.filename,
-              call.args.content,
+            result = await createPdf(call.args.filename,call.args.content, pdfTheme,
               call.args.visual_prompts
             );
           }
@@ -224,7 +222,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
         contents.push({ role: 'user', parts: toolResponses });
 
         response = await ai.models.generateContent({
-          model: 'gemini-3-pro-preview',
+          model: 'gemini-2.5-pro-preview',
           contents,
           config: aiConfig
         });
@@ -261,7 +259,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
     onUpdateCredits
   ]);
 
-  /* ???????????????????????????? Render UI ???????????????????????????? */
+  /*  -------------------------- Render UI -------------------------- */
   return (
     <div className={`flex flex-col h-full relative overflow-hidden transition-colors ${isDark ? 'bg-[#0B0C10]' : 'bg-[#F8F9FA]'}`}>
       <div className="flex-1 overflow-y-auto px-6 md:px-12 pt-16 pb-48 space-y-10 custom-scrollbar" ref={scrollRef}>

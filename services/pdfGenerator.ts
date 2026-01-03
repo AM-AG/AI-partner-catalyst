@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { GoogleGenAI } from '@google/genai'
 import { db } from '../store/db'
+import { ai } from './aiClient'
 
 interface PdfThemeConfig {
   primaryColor: string
@@ -10,17 +11,11 @@ interface PdfThemeConfig {
 
 const COST_PER_PDF_IMAGE = 5
 
-export async function createPdf({
-  filename,
-  content,
-  theme,
-  visualPrompts,
-}: {
+export async function createPdf({filename,content,theme,visualPrompts}: {
   filename: string
   content: string
   theme: PdfThemeConfig
-  visualPrompts?: string[]
-}) {
+  visualPrompts?: string[]}) {
   try {
     const doc = new jsPDF()
     const margin = 20
@@ -38,10 +33,6 @@ export async function createPdf({
     }
 
     drawHeader()
-
-    const ai = new GoogleGenAI({
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY,
-    })
 
     const paragraphs = content.split('\n').filter(p => p.trim())
 

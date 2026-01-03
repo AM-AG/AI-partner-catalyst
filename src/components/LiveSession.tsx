@@ -5,8 +5,7 @@ import { useLiveSession } from '../../hooks/useLiveSession';
 export const LiveSession: React.FC<{
   project: Project | null;
   theme: Theme;
-  onUpdateCredits: (amount: number) => void;
-}> = ({ theme, onUpdateCredits }) => {
+  onUpdateCredits: (amount: number) => void;}> = ({ theme, onUpdateCredits }) => {
   const isDark = theme === 'dark';
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);

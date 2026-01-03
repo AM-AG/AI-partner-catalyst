@@ -166,15 +166,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Interface Controls */}
-      <div className="p-5 border-t border-white/5 space-y-4">
+      <div className="p-2 border-t border-white/5 space-y-4">
         <button 
           onClick={onThemeToggle}
           className={`w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all transform active:scale-95 ${isDark ? 'border-white/5 bg-white/5 text-[#66FCF1] hover:bg-white/10' : 'border-gray-100 bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
         >
           {isDark ? (
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21" /></svg>
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21" /></svg>
           ) : (
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752" /></svg>
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752" /></svg>
           )}
           {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.3em]">{isDark ? 'LIGHT_UI' : 'DARK_UI'}</span>}
         </button>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { Attachment } from '../types';
 import { createPcmBlob, decodeAudioData, base64ToUint8Array } from '../utils/audio-utils';
+import {ai} from '../services/aiClient';
 
 const BILL_INTERVAL_MS = 10 * 60 * 1000;
 const COST_PER_INTERVAL = 40;
@@ -26,133 +27,331 @@ export function useLiveSession(onUpdateCredits: (amount: number) => void) {
   const inputTextRef = useRef('');
   const outputTextRef = useRef('');
   const nextPlayTimeRef = useRef(0);
+  const stoppingRef = useRef(false);
+
+  // const stop = useCallback(() => {
+  //     billingTimerRef.current && clearInterval(billingTimerRef.current);
+  //     billingTimerRef.current = null;
+
+  //     try { sessionRef.current?.close(); } catch {}
+  //     sessionRef.current = null;
+
+  //     workletRef.current?.disconnect();
+  //     workletRef.current = null;
+
+  //     micRef.current?.getTracks().forEach(t => t.stop());
+  //     micRef.current = null;
+
+  //     if (inputCtxRef.current?.state !== 'closed') {
+  //       inputCtxRef.current?.close();
+  //     }
+  //     inputCtxRef.current = null;
+
+  //     if (outputCtxRef.current?.state !== 'closed') {
+  //       outputCtxRef.current?.close();
+  //     }
+  //     outputCtxRef.current = null;
+
+  //     setIsActive(false);
+  //     setStatus('DISCONNECTED');
+  //     setVolume(0);
+  //   }, []);
 
   const stop = useCallback(() => {
-    billingTimerRef.current && clearInterval(billingTimerRef.current);
+      if (stoppingRef.current) return;
+      stoppingRef.current = true;
 
-    try { sessionRef.current?.close(); } catch {}
-    sessionRef.current = null;
+      billingTimerRef.current && clearInterval(billingTimerRef.current);
+      billingTimerRef.current = null;
 
-    workletRef.current?.disconnect();
-    workletRef.current = null;
+      try {
+        if (sessionRef.current) {
+          sessionRef.current.close();
+        }
+      } catch {}
 
-    micRef.current?.getTracks().forEach(t => t.stop());
-    micRef.current = null;
+      sessionRef.current = null;
 
-    inputCtxRef.current?.close();
-    outputCtxRef.current?.close();
+      workletRef.current?.disconnect();
+      workletRef.current = null;
 
-    setIsActive(false);
-    setStatus('DISCONNECTED');
-    setVolume(0);
-  }, []);
+      micRef.current?.getTracks().forEach(t => t.stop());
+      micRef.current = null;
+
+      if (inputCtxRef.current?.state !== 'closed') {
+        inputCtxRef.current?.close();
+      }
+      inputCtxRef.current = null;
+
+      if (outputCtxRef.current?.state !== 'closed') {
+        outputCtxRef.current?.close();
+      }
+      outputCtxRef.current = null;
+
+      setIsActive(false);
+      setStatus('DISCONNECTED');
+      setVolume(0);
+
+      stoppingRef.current = false;
+    }, []);
+
+  // const start = useCallback(async () => {
+  //     try {
+  //       setError(null);
+  //       setStatus('CONNECTING');
+  //       console.log("Starting live session connection");
+
+  //       const session = await ai.live.connect({
+  //         model: 'gemini-2.5-flash-native-audio-preview',
+  //         config: {
+  //           responseModalities: [Modality.AUDIO],
+  //           inputAudioTranscription: {},
+  //           outputAudioTranscription: {},
+  //           speechConfig: {
+  //             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } }
+  //           }
+  //         },
+  //         callbacks: {
+  //           onopen: () => {
+  //             setIsActive(true);
+  //             setStatus('CONNECTED');
+  //             onUpdateCredits(-COST_PER_INTERVAL);
+
+  //             billingTimerRef.current = setInterval(() => {
+  //               onUpdateCredits(-COST_PER_INTERVAL);
+  //             }, BILL_INTERVAL_MS);
+  //           },
+
+  //           onmessage: async (msg: LiveServerMessage) => {
+  //             if (!outputCtxRef.current) return;
+
+  //             if (outputCtxRef.current.state === 'suspended') {
+  //               await outputCtxRef.current.resume();
+  //             }
+
+  //             for (const part of msg.serverContent?.modelTurn?.parts || []) {
+  //               if (!part.inlineData?.data) continue;
+
+  //               const ctx = outputCtxRef.current;
+
+  //               const buffer = await decodeAudioData(
+  //                 base64ToUint8Array(part.inlineData.data),
+  //                 ctx,
+  //                 24000,
+  //                 1
+  //               );
+
+  //               const src = ctx.createBufferSource();
+  //               src.buffer = buffer;
+
+  //               const gain = ctx.createGain();
+  //               gain.gain.value = 1.2;
+
+  //               src.connect(gain);
+  //               gain.connect(ctx.destination);
+
+  //               // ?? CRITICAL FIX
+  //               if (nextPlayTimeRef.current < ctx.currentTime) {
+  //                 nextPlayTimeRef.current = ctx.currentTime;
+  //               }
+
+  //               src.start(nextPlayTimeRef.current);
+  //               nextPlayTimeRef.current += buffer.duration;
+  //             }
+  //           },
+
+  //           onerror: e => {
+  //             setError(e.message || 'Session error');
+  //             stop();
+  //           }
+  //         }
+  //       });
+
+  //       inputCtxRef.current = new AudioContext({ sampleRate: 16000 });
+  //       outputCtxRef.current = new AudioContext({ sampleRate: 24000 });
+
+  //       await inputCtxRef.current.resume();
+  //       await outputCtxRef.current.resume();
+
+  //       nextPlayTimeRef.current = outputCtxRef.current.currentTime;
+
+  //       await inputCtxRef.current.audioWorklet.addModule('/audio-worklet-processor.js');
+
+  //       micRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+  //       const source = inputCtxRef.current.createMediaStreamSource(micRef.current);
+  //       const worklet = new AudioWorkletNode(inputCtxRef.current, 'mic-processor');
+  //       workletRef.current = worklet;
+
+  //       worklet.port.onmessage = e => {
+  //         const pcm = e.data as Float32Array;
+  //         let sum = 0;
+  //         for (let i = 0; i < pcm.length; i++) sum += pcm[i] ** 2;
+  //         const rms = Math.sqrt(sum / pcm.length);
+  //         setVolume(Math.min(1, rms * 6)); 
+  //         if (rms < 0.01) return;
+
+  //         sessionRef.current?.sendRealtimeInput({
+  //           media: createPcmBlob(pcm)
+  //         });
+  //       };
+
+  //       source.connect(worklet);
+  //       sessionRef.current = session;
+
+  //       console.log("Live session started — audio scheduled correctly");
+  //     } catch (e: any) {
+  //       setError(e.message || 'Failed to start session');
+  //       stop();
+  //     }
+  //   }, [onUpdateCredits, stop]);
 
   const start = useCallback(async () => {
-    try {
-      setError(null);
-      setStatus('CONNECTING');
+      try {
+        setError(null);
+        setStatus('CONNECTING');
+        console.log('Starting live session connection');
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        // --- Create audio contexts FIRST (important for autoplay policies)
+        inputCtxRef.current = new AudioContext({ sampleRate: 16000 });
+        outputCtxRef.current = new AudioContext({ sampleRate: 24000 });
+        nextPlayTimeRef.current = 0;
 
-      inputCtxRef.current = new AudioContext({ sampleRate: 16000 });
-      outputCtxRef.current = new AudioContext({ sampleRate: 24000 });
+        // Resume output context explicitly (Safari / Chrome safety)
+        if (outputCtxRef.current.state === 'suspended') {
+          await outputCtxRef.current.resume();
+        }
 
-      await inputCtxRef.current.audioWorklet.addModule('/audio-worklet-processor.js');
-
-      micRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const source = inputCtxRef.current.createMediaStreamSource(micRef.current);
-      const worklet = new AudioWorkletNode(inputCtxRef.current, 'mic-processor');
-      workletRef.current = worklet;
-
-      worklet.port.onmessage = e => {
-        const pcm = e.data as Float32Array;
-        let sum = 0;
-        for (let i = 0; i < pcm.length; i++) sum += pcm[i] ** 2;
-        const rms = Math.sqrt(sum / pcm.length);
-        setVolume(Math.min(1, rms * 6));
-        if (rms < 0.01) return;
-
-        sessionRef.current?.sendRealtimeInput({
-          media: createPcmBlob(pcm)
-        });
-      };
-
-      source.connect(worklet);
-
-      sessionRef.current = await ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview',
-        config: {
-          responseModalities: [Modality.AUDIO],
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } }
-          },
-          tools: [{googleSearch: {}}]
-        },
-        callbacks: {
-          onopen: () => {
-            setIsActive(true);
-            setStatus('CONNECTED');
-            onUpdateCredits(-COST_PER_INTERVAL);
-
-            billingTimerRef.current = setInterval(() => {
-              onUpdateCredits(-COST_PER_INTERVAL);
-            }, BILL_INTERVAL_MS);
-          },
-
-          onmessage: async (msg: LiveServerMessage) => {
-            if (msg.serverContent?.inputTranscription)
-              inputTextRef.current += msg.serverContent.inputTranscription.text;
-
-            if (msg.serverContent?.outputTranscription)
-              outputTextRef.current += msg.serverContent.outputTranscription.text;
-
-            if (msg.serverContent?.turnComplete) {
-              inputTextRef.current &&
-                setTranscripts(p => [...p, { role: 'user', text: inputTextRef.current }]);
-              outputTextRef.current &&
-                setTranscripts(p => [...p, { role: 'model', text: outputTextRef.current }]);
-              inputTextRef.current = '';
-              outputTextRef.current = '';
-            }
-
-            for (const part of msg.serverContent?.modelTurn?.parts || []) {
-              if (part.inlineData?.data && outputCtxRef.current) {
-                const buffer = await decodeAudioData(
-                  base64ToUint8Array(part.inlineData.data),
-                  outputCtxRef.current,
-                  24000,
-                  1
-                );
-                const src = outputCtxRef.current.createBufferSource();
-                src.buffer = buffer;
-                src.connect(outputCtxRef.current.destination);
-                src.start(nextPlayTimeRef.current);
-                nextPlayTimeRef.current += buffer.duration;
+        const session = await ai.live.connect({
+          model: 'gemini-2.5-flash-native-audio-preview',
+          config: {
+            responseModalities: [Modality.AUDIO],
+            inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Zephyr' }
               }
             }
           },
+          callbacks: {
+            onopen: () => {
+              setIsActive(true);
+              setStatus('CONNECTED');
+              onUpdateCredits(-COST_PER_INTERVAL);
 
-          onclose: stop,
-          onerror: e => {
-            setError(e.message || 'Session error');
-            stop();
+              billingTimerRef.current = setInterval(() => {
+                onUpdateCredits(-COST_PER_INTERVAL);
+              }, BILL_INTERVAL_MS);
+            },
+
+            onmessage: async (msg: LiveServerMessage) => {
+              // --- transcripts
+              if (msg.serverContent?.inputTranscription) {
+                inputTextRef.current += msg.serverContent.inputTranscription.text;
+              }
+
+              if (msg.serverContent?.outputTranscription) {
+                outputTextRef.current += msg.serverContent.outputTranscription.text;
+              }
+
+              if (msg.serverContent?.turnComplete) {
+                if (inputTextRef.current) {
+                  setTranscripts(p => [...p, { role: 'user', text: inputTextRef.current }]);
+                }
+                if (outputTextRef.current) {
+                  setTranscripts(p => [...p, { role: 'model', text: outputTextRef.current }]);
+                }
+                inputTextRef.current = '';
+                outputTextRef.current = '';
+              }
+
+              // --- AUDIO PLAYBACK (RAW PCM)
+              for (const part of msg.serverContent?.modelTurn?.parts || []) {
+                if (!part.inlineData?.data || !outputCtxRef.current) continue;
+
+                const pcmBytes = base64ToUint8Array(part.inlineData.data);
+
+                // PCM16 ? Float32
+                const pcm16 = new Int16Array(pcmBytes.buffer);
+                const float32 = new Float32Array(pcm16.length);
+                for (let i = 0; i < pcm16.length; i++) {
+                  float32[i] = pcm16[i] / 32768;
+                }
+
+                const ctx = outputCtxRef.current;
+                const buffer = ctx.createBuffer(1, float32.length, 24000);
+                buffer.copyToChannel(float32, 0);
+
+                const src = ctx.createBufferSource();
+                src.buffer = buffer;
+                src.connect(ctx.destination);
+
+                // Proper scheduling
+                if (nextPlayTimeRef.current < ctx.currentTime) {
+                  nextPlayTimeRef.current = ctx.currentTime;
+                }
+
+                src.start(nextPlayTimeRef.current);
+                nextPlayTimeRef.current += buffer.duration;
+              }
+            },
+
+            onerror: e => {
+              setError(e.message || 'Session error');
+              stop();
+            }
           }
-        }
-      });
-    } catch (e: any) {
-      setError(e.message || 'Failed to start session');
-      stop();
-    }
-  }, [onUpdateCredits, stop]);
+        });
+
+        sessionRef.current = session;
+
+        // --- MIC SETUP
+        await inputCtxRef.current.audioWorklet.addModule('/audio-worklet-processor.js');
+
+        micRef.current = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true
+          }
+        });
+
+        const source = inputCtxRef.current.createMediaStreamSource(micRef.current);
+        const worklet = new AudioWorkletNode(inputCtxRef.current, 'mic-processor');
+        workletRef.current = worklet;
+
+        worklet.port.onmessage = e => {
+          const pcm = e.data as Float32Array;
+
+          // Volume meter
+          let sum = 0;
+          for (let i = 0; i < pcm.length; i++) sum += pcm[i] ** 2;
+          const rms = Math.sqrt(sum / pcm.length);
+          setVolume(Math.min(1, rms * 6));
+
+          if (rms < 0.01) return;
+
+          sessionRef.current?.sendRealtimeInput({
+            media: createPcmBlob(pcm)
+          });
+        };
+
+        source.connect(worklet);
+
+        console.log('Live session started');
+      } catch (e: any) {
+        setError(e.message || 'Failed to start session');
+        stop();
+      }
+    }, [onUpdateCredits, stop]);
+
 
   const sendAsset = useCallback((asset: Attachment) => {
     sessionRef.current?.sendRealtimeInput({
       media: { data: asset.data, mimeType: asset.mimeType }
     });
-  }, []);
+  }, []); 
 
   useEffect(() => stop, [stop]);
 
