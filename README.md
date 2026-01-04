@@ -6,7 +6,13 @@
 ## VOXPACT – Strategic AI Intelligence Platform
 
 <div align="center">
-<img width="1200" height="475" src="https://www.youtube.com/channel/UCGsIB0Tg3eGqFK0iw22W0hQ" />
+  <a
+    href="https://www.youtube.com/watch?v=osVVUU2bwh8"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Explore our app by watching this video
+  </a>
 </div>
 
 VOXPACT is a high-fidelity AI chat and document synthesis platform designed for strategic analysis, intelligence reporting, and structured knowledge generation.

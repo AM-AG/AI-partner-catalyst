@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Theme, Project, Attachment } from '../../types';
 import { useLiveSession } from '../../hooks/useLiveSession';
+import {VITE_AGENT_ID_ELEVENLABS} from '../../services/aiClient';
 
 export const LiveSession: React.FC<{
   project: Project | null;
@@ -82,6 +83,10 @@ export const LiveSession: React.FC<{
       </div>
 
       <input ref={fileRef} type="file" multiple className="hidden" onChange={handleFiles} />
+      <div className="mt-6 h-64 overflow-y-auto font-mono text-sm bg-black/30 p-4 rounded-xl">
+          <elevenlabs-convai agent-id={VITE_AGENT_ID_ELEVENLABS}></elevenlabs-convai>
+          <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+      </div>
     </div>
   );
 };
