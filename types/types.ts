@@ -3,10 +3,34 @@ export type Theme = 'dark' | 'light';
 
 export interface User {
   id: string;
+  user_id: string;
   name: string;
   avatar: string;
   email: string;
+  password?: string;
   credits: number;
+}
+
+export interface ApiKey {
+  id: string;
+  userId: string;
+  name: string;
+  keyHash: string;
+  lastFour: string;
+  createdAt: number;
+  lastUsedAt?: number;
+  revoked: boolean;
+}
+
+export interface LandingPageProps {
+  theme: 'dark' | 'light';
+  isGoogleConfigured: boolean;
+}
+
+export interface InfoModalProps {
+  type: ModalType;
+  onClose: () => void;
+  theme: Theme;
 }
 
 export interface SmartChatProps {
@@ -67,8 +91,21 @@ export interface GeneratedImage {
 }
 
 // Modal Types
-export type ModalType = 'PRICING' | 'ABOUT' | 'PRIVACY' | 'AFFILIATION' | 'SDK';
+export type ModalType = 'PRICING' | 'ABOUT' | 'PRIVACY' | 'PARTNERS' | 'TERMS' | 'COOKIES' | 'AFFILIATION' | 'SDK'| 'LOGIN';
 
 // Audio Types for Live API
 export type PCMFloat32Data = Float32Array;
 export type PCMInt16Data = Int16Array;
+
+export enum ConnectionStatus {
+  DISCONNECTED = 'DISCONNECTED',
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
+  ERROR = 'ERROR'
+}
+export interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: number;
+}

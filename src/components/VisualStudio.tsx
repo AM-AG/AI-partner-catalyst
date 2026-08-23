@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { GeneratedImage, ImageResolution, Project, Theme } from '../../types';
+import { GeneratedImage, ImageResolution, Project, Theme } from '../../types/types';
 import { db } from '../../store/db';
-import { ai } from '../../services/aiClient';
+import { ai, apiKey, AI_model_image_gen, AI_model_video_gen } from '../../services/aiClient';
+import { API_BASE_URL } from '@/services/parameters';
 
 interface VisualStudioProps {
   project: Project | null;
@@ -11,8 +12,7 @@ interface VisualStudioProps {
   onUpdateCredits: (amount: number) => void;
 }
 
-const COST_PER_IMAGE = 30;
-
+// const COST_PER_IMAGE = 30;
 //   const [prompt, setPrompt] = useState('');
 //   const [resolution, setResolution] = useState<ImageResolution>(ImageResolution.RES_1K);
 //   const [isGenerating, setIsGenerating] = useState(false);
@@ -206,32 +206,170 @@ const COST_PER_IMAGE = 30;
 //   );
 // };
 
-export const VisualStudio: React.FC = () => {
+
+export const VisualStudio = () => {   //(projectID, project, theme, onUpdateCredits) => {
+
   const [genType, setGenType] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusText, setStatusText] = useState('');
-  const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('16:9');
+  const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9'| "3:4">('16:9');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [lastGeneratedImage, setLastGeneratedImage] = useState<string | null>(null);
 
-  const generateImage = async (customPrompt?: string) => {
+  // const generateImage = async (customPrompt: string, aspectRatio: '1:1'| "3:4" | "16:9" = "1:1") => {
+  //   try {
+  //     setIsGenerating(true);
+  //     setStatusText('Visualizing your imagination...');
+      
+  //     // const response = await ai.models.generateContent({
+  //     //   model: AI_model_image_gen,  
+  //     //   contents: { parts: [{ text: customPrompt }] },
+  //     //   config: { imageConfig: { aspectRatio } }
+  //     // });
+  //     // for (const part of response.candidates?.[0]?.content?.parts || []) {
+  //     //   if (part.inlineData) {
+  //     //     const url = `data:image/png;base64,${part.inlineData.data}`;
+  //     //     setResultUrl(url);
+  //     //     setLastGeneratedImage(part.inlineData.data);
+  //     //     break;
+  //     //   }
+  //     // }
+
+  //     const response = await fetch(`${API_BASE_URL}/generate`, {
+  //         credentials: "include",    
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({ 
+  //           "provider": "openrouter",
+  //           "model": "some-image-model",
+  //           "type": "image",
+  //           "input": {
+  //                   "messages":[
+  //                       {
+  //                       "role": "user",
+  //                       "prompt": customPrompt
+  //                       }
+  //                   ]
+  //           },
+  //           "options": {
+  //                   "image_size": aspectRatio //"1024x1024"
+  //               }
+  //           })
+  //       }
+  //     )
+  //     const body = await response.json().catch(() => ({}));
+
+  //     if (!response.ok) {
+  //       return { error: body.error || body.message || 'Invalid request' };
+  //     }
+
+
+  //   } catch (e) {
+  //     console.error(e);
+  //     setStatusText('Generation failed. Please try again.');
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
+
+  // const generateVideo = async (prompt: string, useRefImage = false) => {
+  //   try {
+  //     setIsGenerating(true);
+  //     setStatusText('Initializing Veo engine...');
+
+  //     const videoConfig: any = {
+  //       model: AI_model_video_gen,
+  //       prompt: prompt,
+  //       config: {
+  //         numberOfVideos: 1,
+  //         resolution: '720p',
+  //         aspectRatio: aspectRatio
+  //       }
+  //     };
+
+  //     if (useRefImage && lastGeneratedImage) {
+  //       videoConfig.image = {
+  //         imageBytes: lastGeneratedImage,
+  //         mimeType: 'image/png'
+  //       };
+  //     }
+
+  //     let operation = await ai.models.generateVideos(videoConfig);
+      
+  //     while (!operation.done) {
+  //       await new Promise(resolve => setTimeout(resolve, 10000));
+  //       operation = await ai.operations.getVideosOperation({ operation });
+        
+  //       const messages = [
+  //       'Analyzing conceptual layout...',
+  //       'Synthesizing temporal consistency...',
+  //       'Rendering cinematic lighting...',
+  //       'Finalizing neural frames...',
+  //       'Optimizing bitrate...'
+  //     ];
+  //       setStatusText(messages[Math.floor(Math.random() * messages.length)]);
+  //     }
+
+  //     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+  //     if (downloadLink) {
+  //       const response = await fetch(downloadLink, {
+  //         method: 'GET',
+  //         headers: {
+  //           'x-goog-api-key': apiKey,
+  //         },
+  //       });
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to download video: ${response.statusText}`);
+  //       }
+  //       const blob = await response.blob();
+  //       const videoBlob = new Blob([blob], { type: 'video/mp4' });
+  //       setResultUrl(URL.createObjectURL(videoBlob));
+  //     } else {
+  //       throw new Error('Video generation failed: No download link returned');
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //     setStatusText('Video synthesis failed. Ensure you have a paid project linked.');
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
+
+  const generate = async (payload: unknown) => {
+    const response = await fetch(`${API_BASE_URL}/generate`, {
+      credentials: 'include',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(body.error || body.message || 'Invalid request');
+    }
+
+    return body;
+  };
+
+  const generateImage = async (customPrompt: string, aspectRatio: '1:1' | '3:4' | '16:9' = '1:1') => {
     try {
       setIsGenerating(true);
       setStatusText('Visualizing your imagination...');
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: { parts: [{ text: customPrompt || prompt }] },
-        config: { imageConfig: { aspectRatio } }
-      });
 
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          const url = `data:image/png;base64,${part.inlineData.data}`;
-          setResultUrl(url);
-          setLastGeneratedImage(part.inlineData.data);
-          break;
-        }
+      const result = await generate({
+        provider: 'openrouter',
+        model: 'krea/krea-2-medium-turbo',
+        type: 'image',
+        input: {
+          messages: [{ role: 'user', prompt: customPrompt }],
+        },
+        options: { image_size: aspectRatio },
+      });
+       
+      for (const image of result.data ?? []) {
+        console.log("Image (base64):", image.b64_json.substring(0, 50) + "...");
       }
     } catch (e) {
       console.error(e);
@@ -241,57 +379,75 @@ export const VisualStudio: React.FC = () => {
     }
   };
 
-  const generateVideo = async (useRefImage = false) => {
+  const generateVideo = async (prompt: string, useRefImage = false) => {
     try {
-      // Check for Veo API Key Selection requirement
-      // @ts-ignore
-      if (!(await window.aistudio.hasSelectedApiKey())) {
-        // @ts-ignore
-        await window.aistudio.openSelectKey();
-      }
-
       setIsGenerating(true);
-      setStatusText('Initializing Veo engine...');
+      setStatusText('Initializing Model engine...');
 
-      const videoConfig: any = {
-        model: 'veo-3.1-fast-generate-preview',
-        prompt: prompt || 'Cinematic cinematic scenery',
+      const input: any = {
+        prompt,
         config: {
           numberOfVideos: 1,
           resolution: '720p',
-          aspectRatio: aspectRatio
-        }
+          aspectRatio,
+        },
       };
 
       if (useRefImage && lastGeneratedImage) {
-        videoConfig.image = {
+        input.image = {
           imageBytes: lastGeneratedImage,
-          mimeType: 'image/png'
+          mimeType: 'image/png',
         };
       }
 
-      let operation = await ai.models.generateVideos(videoConfig);
-      
-      const messages = [
-        'Analyzing conceptual layout...',
-        'Synthesizing temporal consistency...',
-        'Rendering cinematic lighting...',
-        'Finalizing neural frames...',
-        'Optimizing bitrate...'
-      ];
-      let msgIdx = 0;
+      const result = await generate({
+        provider: 'google',
+        model: AI_model_video_gen,
+        type: 'video',
+        input,
+      });
 
-      while (!operation.done) {
-        setStatusText(messages[msgIdx % messages.length]);
-        msgIdx++;
-        await new Promise(r => setTimeout(r, 10000));
-        operation = await ai.operations.getVideosOperation({ operation: operation });
-      }
+      const jobId = result.id;
+      const pollingUrl = result.polling_url;
 
-      const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-      const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-      const blob = await response.blob();
-      setResultUrl(URL.createObjectURL(blob));
+      console.log("Job submitted:", jobId);
+
+      // Step 2: Poll for completion
+      const poll = async () => {
+        while (true) {
+          const pollResponse = await fetch(pollingUrl, {
+            headers: {
+              "Authorization": "Bearer <OPENROUTER_API_KEY>",
+            },
+          });
+          const statusData = await pollResponse.json();
+          console.log("Status:", statusData.status);
+
+          if (statusData.status === "completed") {
+            for (const url of statusData.unsigned_urls ?? []) {
+              console.log("Video URL:", url);
+            }
+            return;
+          }
+
+          if (statusData.status === "failed") {
+            console.error("Error:", statusData.error ?? "Unknown error");
+            return;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      };
+
+      await poll();
+
+      // if (body.videoUrl) {
+      //   const response = await fetch(body.videoUrl);
+      //   if (!response.ok) throw new Error('Failed to download video');
+      //   setResultUrl(URL.createObjectURL(await response.blob()));
+      // } else {
+      //   throw new Error('Video generation failed: No video URL returned');
+      // }
     } catch (e) {
       console.error(e);
       setStatusText('Video synthesis failed. Ensure you have a paid project linked.');
@@ -310,7 +466,7 @@ export const VisualStudio: React.FC = () => {
           <h2 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 uppercase">
             Creative Engine
           </h2>
-          <p className={`text-grey/60 text-xs font-bold tracking-[0.3em] uppercase ${isDark ? 'text-grey-600' : 'text-white/30'}`}>Gemini 2.5 & Veo 3.1 Fast</p>
+          <p className={`text-grey/60 text-xs font-bold tracking-[0.3em] uppercase ${isDark ? 'text-grey-600' : 'text-white/30'}`}>Gemini 3.1 & Veo 3.1 Fast</p>
         </div>
 
         {/* Controls Grid */}
@@ -346,7 +502,7 @@ export const VisualStudio: React.FC = () => {
             <div className={`space-y-4 ${isDark ? 'text-grey-600' : 'text-white/30'}`}>
                <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${isDark ? 'text-grey-600' : 'text-white/30'}`}>Aspect Ratio</label>
                <div className="flex gap-3">
-                 {['1:1', '16:9', '9:16'].map(ratio => (
+                 {['1:1', "3:4", '16:9', '9:16'].map(ratio => (
                    <button 
                     key={ratio}
                     onClick={() => setAspectRatio(ratio as any)}
@@ -360,7 +516,7 @@ export const VisualStudio: React.FC = () => {
 
             <button 
               disabled={isGenerating || !prompt}
-              onClick={() => genType === 'IMAGE' ? generateImage() : generateVideo()}
+              onClick={() => genType === 'IMAGE' ? generateImage(prompt, aspectRatio) : generateVideo(prompt)}
               className="w-full py-4 bg-white text-black font-black text-xs uppercase tracking-[0.3em] rounded-2xl hover:bg-cyan-400 transition-all disabled:opacity-20 disabled:cursor-not-allowed shadow-xl active:scale-[0.98]"
             >
               {isGenerating ? 'Processing...' : `Generate ${genType}`}
@@ -394,7 +550,7 @@ export const VisualStudio: React.FC = () => {
                   </a>
                   {genType === 'IMAGE' && (
                     <button 
-                      onClick={() => { setGenType('VIDEO'); generateVideo(true); }}
+                      onClick={() => { setGenType('VIDEO'); generateVideo(prompt, true); }}
                       className="px-6 py-2 bg-indigo-600/80 backdrop-blur-md border border-indigo-500/20 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-indigo-500 transition-all"
                     >
                       Animate this

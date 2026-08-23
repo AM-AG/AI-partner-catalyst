@@ -1,4 +1,23 @@
 
+export function encode(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+export function decode(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
 // Decodes Base64 to Uint8Array
 function base64ToBytes(base64: string): Uint8Array {
   const binaryString = atob(base64);
@@ -27,18 +46,16 @@ function bytesToBase64(bytes: Uint8Array): string {
 export async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
-  sampleRate: number = 24000,
-  numChannels: number = 1
+  sampleRate: number,
+  numChannels: number,
 ): Promise<AudioBuffer> {
-  // Ensure we are working with the actual bytes in the buffer
-  const dataInt16 = new Int16Array(data.buffer, data.byteOffset, data.byteLength / 2);
+  const dataInt16 = new Int16Array(data.buffer);
   const frameCount = dataInt16.length / numChannels;
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
   for (let channel = 0; channel < numChannels; channel++) {
     const channelData = buffer.getChannelData(channel);
     for (let i = 0; i < frameCount; i++) {
-      // Convert Int16 PCM to Float32 [-1.0, 1.0]
       channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
     }
   }
@@ -49,17 +66,14 @@ export async function decodeAudioData(
  * Creates a PCM chunk for sending audio input to the model.
  * Gemini Live API expects 16kHz Mono Int16 PCM.
  */
-export function createPcmBlob(data: Float32Array): { data: string; mimeType: string } {
+export function createBlob(data: Float32Array): { data: string; mimeType: string } {
   const l = data.length;
   const int16 = new Int16Array(l);
   for (let i = 0; i < l; i++) {
-    // Standard clamping and conversion
-    const s = Math.max(-1, Math.min(1, data[i]));
-    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    int16[i] = data[i] * 32768;
   }
-  
   return {
-    data: bytesToBase64(new Uint8Array(int16.buffer)),
+    data: encode(new Uint8Array(int16.buffer)),
     mimeType: 'audio/pcm;rate=16000',
   };
 }

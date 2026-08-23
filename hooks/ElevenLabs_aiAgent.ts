@@ -1,10 +1,10 @@
 // Import required modules
 import fs from 'fs';
 import WebSocket from 'ws';
-
+import {VITE_AGENT_ID_ELEVENLABS} from '../services/aiClient';
 
 const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
-const VOICE_ID = 'your_voice_id';
+const VOICE_ID = VITE_AGENT_ID_ELEVENLABS
 const MODEL_ID = 'eleven_flash_v2_5';
 
 const WEBSOCKET_URI = `wss://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/multi-stream-input?model_id=${MODEL_ID}`;

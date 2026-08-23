@@ -1,0 +1,61 @@
+@keyframes loading-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(55%);
+  }
+}
+
+@keyframes orb-slow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+}
+
+@keyframes orb-slow-reverse {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-25px, 20px) scale(1.05);
+  }
+}
+
+.animate-loading-progress {
+  animation: loading-progress 2.2s ease-in-out infinite;
+}
+
+.animate-orb-slow {
+  animation: orb-slow 12s ease-in-out infinite;
+}
+
+.animate-orb-slow-reverse {
+  animation: orb-slow-reverse 15s ease-in-out infinite;
+}
+
+.bg-grid-dark {
+  background-image:
+    linear-gradient(rgba(102, 252, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102, 252, 241, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.bg-grid-light {
+  background-image:
+    linear-gradient(rgba(0, 122, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 122, 255, 0.06) 1px, transparent 1px);
+  background-size: 50px 50px;
+}

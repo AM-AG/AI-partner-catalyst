@@ -1,19 +1,12 @@
 import React, {useState,useRef,useEffect,useCallback,useMemo} from 'react';
-import { jsPDF } from 'jspdf';
-import { GoogleGenAI } from '@google/genai';
-
-import { SmartChatProps, PdfThemeConfig, ChatMessage, Project, Theme, Attachment } from '../../types';
+import { AttachIcon, DocIcon, MicIcon, SendIcon } from '../components/icons';
+import { SmartChatProps, PdfThemeConfig, 
+        ChatMessage, Project, Theme, Attachment } from '../../types/types';
 import { db } from '../../store/db';
-import { createFileTool, createPdfTool } from '../../tools';
 import { createPdf } from '../../services/pdfGenerator';
-import {ai, aiConfig} from '../../services/aiClient';
-
-/*  -------------------------- Constants -------------------------- */
-
-const COST_PER_CHAT = 5;
-const PAGE_MARGIN = 20;
-const PAGE_TOP = 30;
-const PAGE_BOTTOM = 270;
+import {AI_model_chat, ai, aiConfig} from '../../services/aiClient';
+import { COST_PER_CHAT } from '../../services/parameters';
+import { X } from "lucide-react";
 
 /*  -------------------------- Component -------------------------- */
 
@@ -158,7 +151,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
         {
           id: crypto.randomUUID(),
           role: 'model',
-          text: 'INSUFFICIENT CREDITS.',
+          text: 'INSUFFICIENT CREDITS! Please top up to continue the conversation.',
           timestamp: Date.now()
         }
       ]);
@@ -193,7 +186,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
       }));
 
       let response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro-preview',
+        model: AI_model_chat,
         contents,
         config: aiConfig
       });
@@ -205,7 +198,8 @@ export const SmartChat: React.FC<SmartChatProps> = ({
           let result = 'FAILED';
 
           if (call.name === 'create_pdf') {
-            result = await createPdf(call.args.filename,call.args.content, pdfTheme,
+            result = await createPdf(call.args.filename,
+              call.args.content, pdfTheme,
               call.args.visual_prompts
             );
           }
@@ -222,7 +216,7 @@ export const SmartChat: React.FC<SmartChatProps> = ({
         contents.push({ role: 'user', parts: toolResponses });
 
         response = await ai.models.generateContent({
-          model: 'gemini-2.5-pro-preview',
+          model: AI_model_chat,
           contents,
           config: aiConfig
         });
@@ -258,6 +252,18 @@ export const SmartChat: React.FC<SmartChatProps> = ({
     createPdf,
     onUpdateCredits
   ]);
+  
+  /*  -------------------------- Text display -------------------------- */
+   const TextDisplay = useCallback(
+    ({ text }: { text: string }) => {
+      return (
+        <div style={{ whiteSpace: "pre-wrap" }}>
+          {text}
+        </div>
+      );
+    },
+    []
+  );
 
   /*  -------------------------- Render UI -------------------------- */
   return (
@@ -271,18 +277,41 @@ export const SmartChat: React.FC<SmartChatProps> = ({
         )}
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group/msg animate-in fade-in slide-in-from-bottom-2 duration-400`}>
-            <div className={`max-w-[85%] md:max-w-[70%] p-6 rounded-3xl relative transition-all border ${msg.role === 'user' ? (isDark ? 'bg-[#1F2833]/80 text-[#C5C6C7] border-[#45A29E]/20' : 'bg-white border-gray-200 shadow-sm') : (isDark ? 'bg-[#45A29E]/5 text-[#66FCF1] border-[#66FCF1]/20' : 'bg-[#007AFF]/5 text-[#007AFF] border-[#007AFF]/10')}`}>
-              <div className="text-[9px] font-mono mb-2 uppercase tracking-widest opacity-40">{msg.role} // {new Date(msg.timestamp).toLocaleTimeString()}</div>
+            <div className={`max-w-[85%] md:max-w-[70%] p-6 rounded-3xl relative transition-all border 
+                ${msg.role === 'user' ? 
+                  (isDark ? 
+                    'bg-[#1F2833]/80 text-[#C5C6C7] border-[#45A29E]/20' :
+                    'bg-white border-gray-200 shadow-sm') : 
+                    (isDark ? 'bg-[#45A29E]/5 text-[#66FCF1] border-[#66FCF1]/20' :
+                      'bg-[#007AFF]/5 text-[#007AFF] border-[#007AFF]/10')
+                  }
+              `}>
+              <div className="text-[9px] font-mono mb-2 uppercase tracking-widest opacity-40">
+                {msg.role} / {new Date(msg.timestamp).toLocaleTimeString()}
+              </div>
               {msg.role === 'model' && (
-                <button onClick={() => toggleSpeak(msg.id, msg.text)} className={`absolute -right-12 top-2 p-3 rounded-2xl transition-all ${currentlySpeakingId === msg.id ? 'bg-red-500 text-white animate-pulse' : `opacity-0 group-hover/msg:opacity-100 ${isDark ? 'bg-[#1F2833] text-[#66FCF1]' : 'bg-white text-[#007AFF] shadow-md'}`}`}>
+                <button onClick={() => toggleSpeak(msg.id, msg.text)} 
+                className={`absolute -right-12 top-2 p-3 rounded-2xl transition-all 
+                ${currentlySpeakingId === msg.id ? 'bg-red-500 text-white animate-pulse' :
+                  `opacity-0 group-hover/msg:opacity-100 
+                  ${isDark ? 'bg-[#1F2833] text-[#66FCF1]': 'bg-white text-[#007AFF] shadow-md'}
+                  `}
+                `}>
                   {currentlySpeakingId === msg.id ? (
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
                   ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    </svg>
                   )}
                 </button>
               )}
-              <div className="text-sm leading-relaxed whitespace-pre-wrap font-light">{msg.text}</div>
+              <div className="text-sm leading-relaxed whitespace-pre-wrap font-light">
+                {/* {msg.text} */}
+                <TextDisplay text={msg.text} />
+              </div>
               {msg.attachments && msg.attachments.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {msg.attachments.map((a, i) => (
@@ -342,46 +371,108 @@ export const SmartChat: React.FC<SmartChatProps> = ({
       {/* Command Hub */}
       <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 pointer-events-none">
         <div className="max-w-4xl mx-auto pointer-events-auto space-y-4">
+
+          {/* Attached Files */}
           {attachedFiles.length > 0 && (
             <div className="flex flex-wrap gap-2 px-6">
               {attachedFiles.map((f, i) => (
-                <div key={i} className={`px-3 py-1.5 rounded-xl border text-[9px] font-mono flex items-center gap-2 ${isDark ? 'bg-[#1F2833] border-[#45A29E]/30 text-[#66FCF1]' : 'bg-white border-gray-200 text-[#007AFF]'}`}>
-                  {f.name} <button onClick={() => setAttachedFiles(p => p.filter((_, idx) => idx !== i))} className="hover:text-red-500 font-bold ml-1">×</button>
+                <div
+                  key={i}
+                  className={`px-3 py-1.5 rounded-xl border text-[9px] font-mono flex items-center gap-2
+                    ${isDark
+                      ? 'bg-[#1F2833] border-[#45A29E]/30 text-[#66FCF1]'
+                      : 'bg-white border-gray-200 text-[#007AFF]'}`}
+                >
+                  {f.name}
+                  <button
+                    onClick={() =>
+                      setAttachedFiles(p => p.filter((_, idx) => idx !== i))
+                    }
+                    className="ml-1 text-red-500 hover:opacity-80"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
               ))}
             </div>
           )}
-          <div className={`p-3 rounded-[3rem] border flex items-center gap-2 backdrop-blur-3xl shadow-2xl transition-all ${isDark ? 'bg-[#1F2833]/60 border-[#45A29E]/20' : 'bg-white/90 border-gray-100'}`}>
+
+          {/* Input Bar */}
+          <div
+            className={`p-3 rounded-[3rem] border flex items-center gap-2 backdrop-blur-3xl shadow-2xl transition-all
+              ${isDark
+                ? 'bg-[#1F2833]/60 border-[#45A29E]/20'
+                : 'bg-white/90 border-gray-100'}`}
+          >
+            {/* Left Actions */}
             <div className="flex gap-1 px-2 border-r border-white/5">
-              <button onClick={() => fileInputRef.current?.click()} className={`p-3 rounded-2xl transition-all ${isDark ? 'text-[#45A29E] hover:text-[#66FCF1]' : 'text-gray-400 hover:text-[#007AFF]'}`} title="Attach asset">📎</button>
-              <button 
-                onClick={() => setShowPdfSettings(true)} 
-                className={`p-3 rounded-2xl transition-all ${showPdfSettings ? 'bg-current/10 text-current' : (isDark ? 'text-[#45A29E] hover:text-[#66FCF1]' : 'text-gray-400 hover:text-[#007AFF]')}`}
-                title="Document synthesis settings"
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach asset"
+                className={`p-3 rounded-2xl transition-all
+                  ${isDark ? 'text-[#45A29E] hover:text-[#66FCF1]' : 'text-gray-400 hover:text-[#007AFF]'}`}
               >
-                📄
+                <AttachIcon className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => setShowPdfSettings(true)}
+                title="Document synthesis settings"
+                className={`p-3 rounded-2xl transition-all
+                  ${showPdfSettings
+                    ? 'bg-current/10 text-current'
+                    : isDark
+                      ? 'text-[#45A29E] hover:text-[#66FCF1]'
+                      : 'text-gray-400 hover:text-[#007AFF]'}`}
+              >
+                <DocIcon className="w-4 h-4" />
               </button>
             </div>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple />
-            <input 
-              type="text" 
-              value={input} 
-              onChange={(e) => setInput(e.target.value)} 
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-              placeholder="Submit Intelligence Query..." 
-              className={`flex-1 bg-transparent py-4 px-2 text-sm focus:outline-none placeholder:opacity-30 ${isDark ? 'text-white' : 'text-gray-900'}`} 
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
             />
-            <button onClick={toggleListening} className={`p-3 rounded-2xl transition-all ${isListening ? 'bg-red-500 animate-pulse text-white' : ''}`}>🎙️</button>
-            <button 
-              onClick={handleSend} 
-              disabled={isLoading || (!input.trim() && attachedFiles.length === 0)} 
-              className={`p-4 rounded-full transition-all flex items-center justify-center h-12 w-12 flex-shrink-0 ${isDark ? 'bg-[#66FCF1] text-black hover:shadow-[0_0_20px_rgba(102,252,241,0.4)]' : 'bg-[#007AFF] text-white hover:bg-[#0056B3]'} disabled:opacity-20`}
+
+            {/* Text Input */}
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder="Submit Intelligence Query..."
+              className={`flex-1 bg-transparent py-4 px-2 text-sm focus:outline-none placeholder:opacity-30
+                ${isDark ? 'text-white' : 'text-gray-900'}`}
+            />
+
+            {/* Mic */}
+            <button
+              onClick={toggleListening}
+              className={`p-3 rounded-2xl transition-all
+                ${isListening ? 'bg-red-500 text-white animate-pulse' : ''}`}
             >
-              ➔
+              <MicIcon className="w-4 h-4" />
+            </button>
+
+            {/* Send */}
+            <button
+              onClick={handleSend}
+              disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
+              className={`h-12 w-12 flex items-center justify-center rounded-full transition-all flex-shrink-0
+                ${isDark
+                  ? 'bg-[#66FCF1] text-black hover:shadow-[0_0_20px_rgba(102,252,241,0.4)]'
+                  : 'bg-[#007AFF] text-white hover:bg-[#0056B3]'}
+                disabled:opacity-20`}
+            >
+              <SendIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
+
     </div>
   );
 };
